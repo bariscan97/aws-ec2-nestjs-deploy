@@ -11,35 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check-secrets:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check required secrets
-        run: |
-          missing=0
-
-          if [ -z "${{ secrets.EC2_HOST }}" ]; then
-            echo "::error::Missing secret: EC2_HOST"
-            missing=1
-          fi
-
-          if [ -z "${{ secrets.EC2_USER }}" ]; then
-            echo "::error::Missing secret: EC2_USER"
-            missing=1
-          fi
-
-          if [ -z "${{ secrets.EC2_KEY }}" ]; then
-            echo "::error::Missing secret: EC2_KEY"
-            missing=1
-          fi
-
-          if [ "$missing" -ne 0 ]; then
-            echo "One or more required secrets are missing."
-            exit 1
-          fi
-
   deploy:
-    needs: check-secrets  # ✅ check-secrets 
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
 
     steps:
