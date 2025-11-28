@@ -1,0 +1,64 @@
+services:
+  product-api:
+    build: .
+    container_name: product-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      # postgres:
+      #   condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - product-network
+
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: product-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: ${DB_USER}
+  #     POSTGRES_PASSWORD: ${DB_PASSWORD}
+  #     POSTGRES_DB: ${DB_NAME}
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - product-network
+
+  redis:
+    image: redis:alpine
+    container_name: product-redis
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - product-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: product-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - product-api
+    networks:
+      - product-network
+
+networks:
+  product-network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:
